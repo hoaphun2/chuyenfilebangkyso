@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Ứng dụng Truyền File Có Ký Số An Toàn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* CSS code starts here */
+        :root {
+            --primary-color: #007bff; /* Xanh dương đậm */
+            --primary-dark: #0056b3; /* Xanh dương sẫm hơn */
+            --secondary-color: #6c757d; /* Xám trung tính */
+            --background-light: #f8f9fa; /* Nền trắng xám nhạt */
+            --text-dark: #343a40; /* Chữ đậm đen */
+            --text-medium: #666; /* Chữ xám trung bình */
+            --border-color: #dee2e6; /* Màu viền bảng/input */
+            --card-bg: #ffffff; /* Nền card trắng */
+
+            --success-color: #28a745; /* Xanh lá cây */
+            --error-color: #dc3545; /* Đỏ */
+            --warning-color: #ffc107; /* Vàng cam */
+            --info-color: #17a2b8; /* Xanh lam thông báo */
+
+            --shadow-light: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --shadow-medium: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 900px; /* Tăng chiều rộng tối đa */
+            width: 100%;
+            margin: 20px auto;
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 8px; /* Bo góc nhẹ nhàng hơn */
+            box-shadow: var(--shadow-medium);
+        }
+
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            color: var(--primary-dark);
+            text-align: center;
+            margin-bottom: 30px; /* Khoảng cách lớn hơn */
+            font-weight: 700;
+            font-size: 2.8em; /* To hơn một chút */
+        }
+        .greeting {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        .user-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1em;
+            color: var(--text-medium);
+        }
+        .user-info strong {
+            color: var(--text-dark);
+        }
+
+
+        h2 {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-dark); /* Màu tiêu đề phần */
+            text-align: left; /* Căn trái theo ảnh */
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 1.6em; /* Nhỏ hơn H1 */
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color); /* Đường gạch dưới */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h2 i {
+            color: var(--primary-color); /* Màu icon */
+        }
+        /* Thêm style cho h3 trong card Upload */
+        .upload-section h3, .send-file-section h3 {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 1.2em;
+            color: var(--text-dark);
+            margin-top: 25px; /* Khoảng cách trên */
+            margin-bottom: 15px; /* Khoảng cách dưới */
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee; /* Đường kẻ nhẹ dưới tiêu đề phụ */
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px; /* Khoảng cách giữa các card */
+            box-shadow: var(--shadow-light);
+        }
+
+        /* Auth Section */
+        .auth-section {
+            display: flex;
+            justify-content: flex-end; /* Căn phải theo ảnh ví dụ */
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .auth-button {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+        .auth-button:hover {
+            background-color: #5a6268;
+        }
+        .auth-button.primary { /* Đặt màu chính cho nút Login/Register nếu cần */
+            background-color: var(--primary-color);
+        }
+        .auth-button.primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Form Group */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9em;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 0.9em;
+            box-sizing: border-box;
+            background-color: #fff;
+            color: var(--text-dark);
+        }
+        .form-group select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007bff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13.2-6.8H18.2c-4.8%200-9.3%202.1-13.2%206.8-4.1%204.6-6.1%2011.1-4.8%2017.2l128%20140.7c2.7%203%206.4%204.6%2010.1%204.6s7.4-1.6%2010.1-4.6l128-140.7c1.3-6.1-.7-12.6-4.8-17.2z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 10px top 50%;
+            background-size: 10px auto;
+        }
+
+        /* Upload Specific Styles */
+        .upload-controls {
+            display: flex;
+            gap: 10px; /* Khoảng cách giữa các phần tử */
+            margin-bottom: 15px;
+            align-items: center; /* Căn giữa theo chiều dọc */
+        }
+        .upload-controls input[type="text"] {
+            flex-grow: 1; /* Cho phép input tên file chiếm hết không gian còn lại */
+            background-color: #fff; /* Nền trắng cho input tên file */
+            cursor: default;
+            border: 1px solid var(--border-color); /* Viền giống các input khác */
+        }
+        .upload-controls button {
+            white-space: nowrap; /* Ngăn nút bị xuống dòng */
+        }
+
+        .upload-controls .btn-choose-file {
+            background-color: var(--secondary-color); /* Màu xám cho nút chọn tệp */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+        .upload-controls .btn-choose-file:hover {
+            background-color: #5a6268;
+        }
+
+        #fileInput {
+            display: none; /* Ẩn input file gốc */
+        }
+        .allowed-extensions-info {
+            font-size: 0.85em; /* Kích thước font cho thông báo loại file */
+            color: var(--text-medium);
+            margin-top: -5px; /* Điều chỉnh khoảng cách */
+            margin-bottom: 20px;
+        }
+
+
+        /* Buttons */
+        .form-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: var(--shadow-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: fit-content; /* Nút vừa với nội dung */
+        }
+        .form-button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        .form-button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .form-button:disabled {
+            background-color: #a0cffc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9em;
+            background-color: #fff;
+        }
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            word-break: break-word; /* Đảm bảo nội dung dài không tràn */
+        }
+        .data-table th {
+            background-color: #e9f5ff; /* Nền tiêu đề bảng */
+            font-weight: 700;
+            color: var(--primary-dark);
+            text-transform: uppercase;
+            font-size: 0.8em;
+            letter-spacing: 0.5px;
+        }
+        .data-table tbody tr:hover {
+            background-color: #f0f8ff; /* Hiệu ứng hover cho hàng */
+        }
+        .data-table td .action-button {
+            font-size: 0.85em;
+            padding: 6px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+        .data-table td .action-button.download {
+            background-color: var(--info-color);
+            color: white;
+            border: 1px solid var(--info-color);
+        }
+        .data-table td .action-button.download:hover {
+            background-color: #138496;
+        }
+        .data-table td .action-button.delete {
+            background-color: var(--error-color);
+            color: white;
+            border: 1px solid var(--error-color);
+            margin-left: 5px;
+        }
+        .data-table td .action-button.delete:hover {
+            background-color: #bd2130;
+        }
+
+        .signature-status {
+            font-size: 0.75em;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+            white-space: nowrap;
+            color: white;
+            display: inline-block;
+        }
+        .signature-status.valid { background-color: var(--success-color); }
+        .signature-status.invalid { background-color: var(--error-color); }
+
+        .no-data-message {
+            text-align: center;
+            color: var(--secondary-color);
+            font-style: italic;
+            padding: 20px;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            background-color: #fefefe;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        /* Flash Messages */
+        .flashes {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .flashes li {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: var(--shadow-light);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .flashes li:last-child { margin-bottom: 0; }
+        .flashes .success { background-color: var(--success-color); }
+        .flashes .error { background-color: var(--error-color); }
+        .flashes .warning { background-color: var(--warning-color); color: var(--text-dark); }
+        .flashes .info { background-color: var(--info-color); } /* Đổi tên .message thành .info */
+
+        /* Info Section - Keep simple */
+        .info-section {
+            font-size: 0.9em;
+            padding-top: 10px;
+        }
+        .info-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        .info-section ul {
+            margin-left: 20px;
+            padding-left: 0;
+            list-style: disc;
+        }
+        .info-section ul li {
+            margin-bottom: 8px;
+        }
+        .info-section a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .info-section a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 15px auto;
+            }
+            h1 { font-size: 2.2em; }
+            h2 { font-size: 1.4em; }
+            .card { padding: 20px; margin-bottom: 25px; }
+            .auth-section { justify-content: center; } /* Căn giữa nút Auth trên mobile */
+            .upload-controls { flex-direction: column; align-items: stretch; }
+            .upload-controls .btn-choose-file,
+            .upload-controls input[type="text"],
+            .upload-controls button.form-button { /* Nút tải lên cũng full width */
+                width: 100%;
+            }
+
+            /* Tables: Responsive table behavior */
+            .data-table, .data-table thead, .data-table tbody, .data-table th, .data-table td, .data-table tr {
+                display: block;
+            }
+            .data-table thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            .data-table tr { border: 1px solid var(--border-color); margin-bottom: 10px; border-radius: 5px; }
+            .data-table td {
+                border: none;
+                border-bottom: 1px solid var(--border-color);
+                position: relative;
+                padding-left: 50%;
+                text-align: right;
+            }
+            .data-table td:last-child { border-bottom: none; }
+            .data-table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: 600;
+                color: var(--text-dark);
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8em; }
+            h2 { font-size: 1.2em; }
+            .form-button { padding: 8px 15px; font-size: 0.9em; }
+            .data-table td { padding-left: 40%; }
+            .data-table td::before { width: 35%; }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="auth-section">
+            {% if logged_in %}
+                <span style="font-weight: 600; color: var(--primary-dark); margin-right: 10px;">Xin chào, {{ username }}!</span>
+                <a href="{{ url_for('logout') }}" class="auth-button">Đăng xuất</a>
+            {% else %}
+                <button class="auth-button primary" onclick="showAuthForm('login')">Đăng nhập</button>
+                <button class="auth-button" onclick="showAuthForm('register')">Đăng ký</button>
+            {% endif %}
+        </div>
+
+        <h1>Ứng dụng Truyền File Có Ký Số An Toàn</h1>
+
+        <ul class="flashes" id="flash-messages-list">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </ul>
+
+        {% if logged_in %}
+            <p class="greeting">Bạn đã đăng nhập với tài khoản: **{{ username }}**</p>
+            <p class="user-info">Mã bảo mật của bạn: <strong>{{ security_code }}</strong></p>
+
+            <div class="upload-section card">
+                <h2><i class="fas fa-cloud-upload-alt"></i> Upload File</h2>
+                <form id="uploadForm" method="post" enctype="multipart/form-data" action="{{ url_for('upload_file') }}">
+                    <div class="upload-controls">
+                        <label for="fileInput" class="btn-choose-file">Chọn tệp</label>
+                        <input type="file" name="file" id="fileInput" required>
+                        <input type="text" id="fileNameDisplay" value="Không có tệp nào được chọn." readonly>
+                        <button type="submit" id="uploadButton" class="form-button">
+                            <span id="buttonText">Tải lên</span>
+                            <div class="spinner" id="loadingSpinner"></div>
+                        </button>
+                    </div>
+                    <small class="allowed-extensions-info">
+                        Tất cả các loại tệp đều được chấp nhận. (Kích thước tối đa: 16MB)
+                    </small>
+                </form>
+
+                <h3>File đã tải lên của tôi</h3>
+                {% if files %}
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tên File</th>
+                                <th>Trạng thái Ký số</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for file in files %}
+                                <tr>
+                                    <td data-label="Tên File">{{ file.name }}</td>
+                                    <td data-label="Trạng thái Ký số">
+                                        <span class="signature-status {% if file.has_signature %}valid{% else %}invalid{% endif %}">
+                                            {% if file.has_signature %}
+                                                Đã ký số
+                                            {% else %}
+                                                Chưa ký
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td data-label="Thao tác">
+                                        <a href="{{ url_for('download_file', filename=file.name) }}" class="action-button download" title="Tải xuống"><i class="fas fa-download"></i> Tải</a>
+                                        <button class="action-button delete" data-filename="{{ file.name }}" title="Xóa file"><i class="fas fa-trash-alt"></i> Xóa</button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="no-data-message">Chưa có file nào được tải lên.</p>
+                {% endif %}
+            </div>
+
+            <div class="send-file-section card">
+                <h2><i class="fas fa-paper-plane"></i> Gửi file cho người khác</h2>
+                <h3>Gửi một file đã tải lên</h3>
+                <form>
+                    <div class="form-group">
+                        <label for="fileToSend">Chọn file đã upload:</label>
+                        <select id="fileToSend" name="file_to_send">
+                            <option value="">-- Chọn một file --</option>
+                            {% for file in files %}
+                                <option value="{{ file.name }}">{{ file.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipient">Chọn người nhận:</label>
+                        <select id="recipient" name="recipient">
+                            <option value="">-- Chọn người nhận --</option>
+                            {% for recipient_user in recipients %}
+                                <option value="{{ recipient_user.username }}">
+                                    {{ recipient_user.username }} (Mã bảo mật: {{ recipient_user.security_code }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="form-button">Gửi <i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+
+            <div class="received-history-section card">
+                <h2><i class="fas fa-inbox"></i> Lịch sử nhận file</h2>
+                {% if received_files %}
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tên File</th>
+                                <th>Người gửi</th>
+                                <th>Mã SHA256</th>
+                                <th>Chữ ký</th>
+                                <th>Tải về</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for received_file in received_files %}
+                                <tr>
+                                    <td data-label="Tên File">{{ received_file.name }}</td>
+                                    <td data-label="Người gửi">{{ received_file.sender }}</td>
+                                    <td data-label="Mã SHA256" style="font-family: monospace; font-size: 0.8em; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ received_file.hash }}">{{ received_file.hash | truncate(20, True) }}</td>
+                                    <td data-label="Chữ ký" style="font-family: monospace; font-size: 0.8em; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ received_file.signature }}">{{ received_file.signature | truncate(20, True) }}</td>
+                                    <td data-label="Tải về">
+                                        <a href="#" class="action-button download" title="Tải xuống"><i class="fas fa-download"></i> Tải</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="no-data-message">Chưa có file nào được nhận.</p>
+                {% endif %}
+            </div>
+
+            <div class="sent-history-section card">
+                <h2><i class="fas fa-paper-plane"></i> Lịch sử gửi file</h2>
+                {% if sent_files %}
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tên File</th>
+                                <th>Người nhận</th>
+                                <th>Mã SHA256</th>
+                                <th>Chữ ký</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sent_file in sent_files %}
+                                <tr>
+                                    <td data-label="Tên File">{{ sent_file.name }}</td>
+                                    <td data-label="Người nhận">{{ sent_file.receiver }}</td>
+                                    <td data-label="Mã SHA256" style="font-family: monospace; font-size: 0.8em; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ sent_file.hash }}">{{ sent_file.hash | truncate(20, True) }}</td>
+                                    <td data-label="Chữ ký" style="font-family: monospace; font-size: 0.8em; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ sent_file.signature }}">{{ sent_file.signature | truncate(20, True) }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="no-data-message">Chưa có file nào được gửi.</p>
+                {% endif %}
+            </div>
+
+            <div class="info-section card">
+                <h2><i class="fas fa-info-circle"></i> Tìm hiểu về Chữ Ký Số</h2>
+                <p>
+                    Chữ ký số là một kỹ thuật mã hóa mạnh mẽ, được sử dụng để xác minh tính **toàn vẹn** và **nguồn gốc** của dữ liệu điện tử. Nó đảm bảo rằng dữ liệu không bị thay đổi và đến từ người gửi đáng tin cậy.
+                </p>
+                <ul>
+                    <li>Khi bạn **tải lên một file**, server sẽ tạo một **chữ ký số duy nhất** cho file đó bằng **khóa riêng tư** của nó. Chữ ký này được lưu trữ riêng biệt (dưới dạng file `.signature`).</li>
+                    <li>Khi bạn **tải xuống file**, server sẽ sử dụng **khóa công khai** tương ứng để kiểm tra lại chữ ký.</li>
+                    <li>Nếu quá trình kiểm tra **thành công**, điều đó xác nhận rằng file bạn nhận được **chính xác là file đã được gửi**, không bị thay đổi hay làm hỏng.</li>
+                    <li>Nếu quá trình kiểm tra **thất bại**, điều này cảnh báo rằng file có thể đã bị **can thiệp** sau khi được ký số.</li>
+                </ul>
+                <p>
+                    Để kiểm tra độc lập chữ ký số, bạn có thể tải về khóa công khai của server:
+                    <a href="{{ url_for('get_public_key') }}" download="server_public_key.pem">Tải xuống Khóa Công Khai của Server</a>
+                </p>
+            </div>
+        {% else %}
+            <div class="auth-forms">
+                <div id="loginFormCard" class="card" style="display: block;">
+                    <h2><i class="fas fa-sign-in-alt"></i> Đăng nhập</h2>
+                    <form action="{{ url_for('login') }}" method="post">
+                        <div class="form-group">
+                            <label for="loginUsername">Tên người dùng:</label>
+                            <input type="text" id="loginUsername" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Mật khẩu:</label>
+                            <input type="password" id="loginPassword" name="password" required>
+                        </div>
+                        <button type="submit" class="form-button">Đăng nhập</button>
+                    </form>
+                </div>
+
+                <div id="registerFormCard" class="card" style="display: none;">
+                    <h2><i class="fas fa-user-plus"></i> Đăng ký</h2>
+                    <form action="{{ url_for('register') }}" method="post">
+                        <div class="form-group">
+                            <label for="registerUsername">Tên người dùng:</label>
+                            <input type="text" id="registerUsername" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Mật khẩu:</label>
+                            <input type="password" id="registerPassword" name="password" required>
+                        </div>
+                        <button type="submit" class="form-button">Đăng ký</button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            const uploadForm = document.getElementById('uploadForm');
+            const uploadButton = document.getElementById('uploadButton');
+            const buttonText = document.getElementById('buttonText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const flashMessagesList = document.getElementById('flash-messages-list');
+            const deleteButtons = document.querySelectorAll('.action-button.delete');
+            const maxFileSize = 16 * 1024 * 1024; // 16 MB, khớp với app.config['MAX_CONTENT_LENGTH']
+
+            // Hàm tạo thông báo flash tùy chỉnh từ JS
+            function createFlashMessage(message, category) {
+                const li = document.createElement('li');
+                li.className = category;
+                li.textContent = message;
+                flashMessagesList.appendChild(li);
+
+                setTimeout(() => {
+                    li.style.opacity = '0';
+                    li.style.transform = 'translateY(-20px)';
+                    li.addEventListener('transitionend', () => li.remove());
+                }, 5000);
+            }
+
+            // Xử lý File Input và Client-side Validation (chỉ còn kiểm tra kích thước)
+            if (fileInput) { // Chỉ chạy nếu phần upload tồn tại (khi đã đăng nhập)
+                fileInput.addEventListener('change', function() {
+                    if (this.files && this.files.length > 0) {
+                        const file = this.files[0];
+
+                        if (file.size > maxFileSize) {
+                            createFlashMessage(`Kích thước tệp quá lớn (${(file.size / (1024 * 1024)).toFixed(2)} MB). Vui lòng tải lên tệp nhỏ hơn ${(maxFileSize / (1024 * 1024)).toFixed(0)} MB.`, 'error');
+                            fileInput.value = ''; // Reset input file
+                            fileNameDisplay.value = 'Không có tệp nào được chọn.';
+                            return;
+                        }
+
+                        fileNameDisplay.value = file.name;
+                    } else {
+                        fileNameDisplay.value = 'Không có tệp nào được chọn.';
+                    }
+                });
+            }
+
+            // Hiệu ứng loading khi upload và Client-side validation check trước khi submit
+            if (uploadForm) { // Chỉ chạy nếu form upload tồn tại
+                uploadForm.addEventListener('submit', function(event) {
+                    if (fileInput.files.length === 0 || fileNameDisplay.value === 'Không có tệp nào được chọn.') {
+                        createFlashMessage('Vui lòng chọn một tệp để tải lên.', 'warning');
+                        event.preventDefault(); // Ngăn chặn form submit nếu chưa chọn tệp
+                        return;
+                    }
+
+                    const fileToUpload = fileInput.files[0];
+                    if (fileToUpload.size > maxFileSize) {
+                        event.preventDefault();
+                        return;
+                    }
+
+                    uploadButton.disabled = true;
+                    buttonText.textContent = 'Đang tải lên...';
+                    loadingSpinner.style.display = 'block';
+                });
+            }
+
+            // Tự động ẩn thông báo Flash từ server
+            const serverFlashes = flashMessagesList.querySelectorAll('li');
+            serverFlashes.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateY(-20px)';
+                    message.addEventListener('transitionend', function() {
+                        message.remove();
+                    });
+                }, 5000);
+            });
+
+            // Xử lý nút xóa file (trong phần "File của tôi")
+            // Chỉ thêm event listener nếu nút delete tồn tại (khi đã đăng nhập)
+            if (deleteButtons.length > 0) {
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const filenameToDelete = this.dataset.filename;
+                        if (confirm(`Bạn có chắc chắn muốn xóa tệp "${filenameToDelete}" không?`)) {
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = `/delete/${filenameToDelete}`;
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+                });
+            }
+
+            // Hàm hiển thị form Đăng nhập/Đăng ký
+            window.showAuthForm = function(formType) {
+                const loginCard = document.getElementById('loginFormCard');
+                const registerCard = document.getElementById('registerFormCard');
+
+                if (formType === 'login') {
+                    loginCard.style.display = 'block';
+                    registerCard.style.display = 'none';
+                } else if (formType === 'register') {
+                    loginCard.style.display = 'none';
+                    registerCard.style.display = 'block';
+                }
+            };
+
+            // Logic để hiển thị lại form đăng nhập/đăng ký nếu có lỗi liên quan
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectFrom = urlParams.get('from_auth');
+            if (redirectFrom === 'register_error') {
+                 showAuthForm('register');
+            } else if (redirectFrom === 'login_error') {
+                 showAuthForm('login');
+            }
+        });
+    </script>
+</body>
+</html>
