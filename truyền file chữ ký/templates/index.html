@@ -94,7 +94,8 @@
             color: var(--primary-color); /* Màu icon */
         }
         /* Thêm style cho h3 trong card Upload */
-        .upload-section h3, .send-file-section h3 {
+        .upload-section h3, .send-file-section h3,
+        .received-history-section h3, .sent-history-section h3 {
             font-family: 'Open Sans', sans-serif;
             font-size: 1.2em;
             color: var(--text-dark);
@@ -179,6 +180,7 @@
             gap: 10px; /* Khoảng cách giữa các phần tử */
             margin-bottom: 15px;
             align-items: center; /* Căn giữa theo chiều dọc */
+            flex-wrap: wrap; /* Cho phép xuống dòng trên màn hình nhỏ */
         }
         .upload-controls input[type="text"] {
             flex-grow: 1; /* Cho phép input tên file chiếm hết không gian còn lại */
@@ -328,6 +330,11 @@
         }
         .signature-status.valid { background-color: var(--success-color); }
         .signature-status.invalid { background-color: var(--error-color); }
+        .signature-status.pending { background-color: var(--warning-color); color: var(--text-dark); }
+        .signature-status.received { background-color: var(--info-color); }
+        .signature-status.sender_deleted { background-color: #999; } /* Gray for deleted by sender status */
+        .signature-status.file_not_found { background-color: #f08080; } /* Light red for file not found */
+
 
         .no-data-message {
             text-align: center;
@@ -393,6 +400,25 @@
             text-decoration: underline;
         }
 
+        /* Download specific styles */
+        .download-form-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .download-form-container input[type="text"] {
+            width: 100px; /* Chiều rộng cố định cho input mã bảo mật */
+            padding: 6px 8px;
+            font-size: 0.85em;
+            text-align: center;
+        }
+        .download-form-container button {
+            padding: 6px 10px;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .container {
@@ -439,6 +465,16 @@
                 font-weight: 600;
                 color: var(--text-dark);
             }
+            .download-form-container {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+            .download-form-container input[type="text"] {
+                width: 100%;
+            }
+            .download-form-container button {
+                width: 100%;
+            }
         }
 
         @media (max-width: 480px) {
@@ -477,11 +513,16 @@
 
         {% if logged_in %}
             <p class="greeting">Bạn đã đăng nhập với tài khoản: **{{ username }}**</p>
-            <p class="user-info">Mã bảo mật của bạn: <strong>{{ security_code }}</strong></p>
+            <p class="user-info">Mã bảo mật cá nhân của bạn: <strong>{{ user_security_code }}</strong></p>
 
             <div class="upload-section card">
                 <h2><i class="fas fa-cloud-upload-alt"></i> Upload File</h2>
                 <form id="uploadForm" method="post" enctype="multipart/form-data" action="{{ url_for('upload_file') }}">
+                    <div class="form-group">
+                        <label for="file_security_code">Tạo mã bảo mật cho tệp (dùng để tải xuống):</label>
+                        <input type="text" id="file_security_code" name="file_security_code" placeholder="Ví dụ: 123456" required pattern="[a-zA-Z0-9]{4,}" title="Mã bảo mật phải có ít nhất 4 ký tự chữ hoặc số.">
+                        <small style="color: var(--text-medium);">Mã này sẽ cần để tải xuống tệp này sau này.</small>
+                    </div>
                     <div class="upload-controls">
                         <label for="fileInput" class="btn-choose-file">Chọn tệp</label>
                         <input type="file" name="file" id="fileInput" required>
@@ -497,19 +538,21 @@
                 </form>
 
                 <h3>File đã tải lên của tôi</h3>
-                {% if files %}
+                {% if uploaded_files %}
                     <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Tên File</th>
+                                <th>Mã bảo mật File</th>
                                 <th>Trạng thái Ký số</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for file in files %}
+                            {% for file in uploaded_files %}
                                 <tr>
-                                    <td data-label="Tên File">{{ file.name }}</td>
+                                    <td data-label="Tên File">{{ file.original_name }}</td>
+                                    <td data-label="Mã bảo mật File" style="font-weight: 600; color: var(--primary-dark);">{{ file.file_security_code }}</td>
                                     <td data-label="Trạng thái Ký số">
                                         <span class="signature-status {% if file.has_signature %}valid{% else %}invalid{% endif %}">
                                             {% if file.has_signature %}
@@ -520,8 +563,11 @@
                                         </span>
                                     </td>
                                     <td data-label="Thao tác">
-                                        <a href="{{ url_for('download_file', filename=file.name) }}" class="action-button download" title="Tải xuống"><i class="fas fa-download"></i> Tải</a>
-                                        <button class="action-button delete" data-filename="{{ file.name }}" title="Xóa file"><i class="fas fa-trash-alt"></i> Xóa</button>
+                                        <div class="download-form-container">
+                                            <input type="text" class="file-security-code-input" placeholder="Mã bảo mật" data-filename="{{ file.unique_name }}">
+                                            <button class="action-button download-own-file" data-unique-filename="{{ file.unique_name }}" title="Tải xuống"><i class="fas fa-download"></i> Tải</button>
+                                        </div>
+                                        <button class="action-button delete" data-unique-filename="{{ file.unique_name }}" title="Xóa file"><i class="fas fa-trash-alt"></i> Xóa</button>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -534,27 +580,32 @@
 
             <div class="send-file-section card">
                 <h2><i class="fas fa-paper-plane"></i> Gửi file cho người khác</h2>
-                <h3>Gửi một file đã tải lên</h3>
-                <form>
+                <h3>Gửi một file đã tải lên của bạn</h3>
+                <form id="sendFileForm" method="post" action="{{ url_for('send_file_to_other') }}">
                     <div class="form-group">
                         <label for="fileToSend">Chọn file đã upload:</label>
-                        <select id="fileToSend" name="file_to_send">
+                        <select id="fileToSend" name="file_to_send" required>
                             <option value="">-- Chọn một file --</option>
-                            {% for file in files %}
-                                <option value="{{ file.name }}">{{ file.name }}</option>
+                            {% for file in uploaded_files %}
+                                <option value="{{ file.unique_name }}">{{ file.original_name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="recipient">Chọn người nhận:</label>
-                        <select id="recipient" name="recipient">
+                        <select id="recipient" name="recipient" required>
                             <option value="">-- Chọn người nhận --</option>
                             {% for recipient_user in recipients %}
                                 <option value="{{ recipient_user.username }}">
-                                    {{ recipient_user.username }} (Mã bảo mật: {{ recipient_user.security_code }})
+                                    {{ recipient_user.username }} (Mã bảo mật cá nhân: {{ recipient_user.security_code }})
                                 </option>
                             {% endfor %}
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sent_security_code">Tạo mã bảo mật cho giao dịch gửi này:</label>
+                        <input type="text" id="sent_security_code" name="sent_security_code" placeholder="Mã người nhận cần nhập" required pattern="[a-zA-Z0-9]{4,}" title="Mã bảo mật phải có ít nhất 4 ký tự chữ hoặc số.">
+                        <small style="color: var(--text-medium);">Mã này sẽ được người nhận sử dụng để tải xuống tệp này.</small>
                     </div>
                     <button type="submit" class="form-button">Gửi <i class="fas fa-paper-plane"></i></button>
                 </form>
@@ -568,20 +619,41 @@
                             <tr>
                                 <th>Tên File</th>
                                 <th>Người gửi</th>
-                                <th>Mã SHA256</th>
-                                <th>Chữ ký</th>
-                                <th>Tải về</th>
+                                <th>Ngày gửi</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for received_file in received_files %}
                                 <tr>
-                                    <td data-label="Tên File">{{ received_file.name }}</td>
+                                    <td data-label="Tên File">{{ received_file.original_name }}</td>
                                     <td data-label="Người gửi">{{ received_file.sender }}</td>
-                                    <td data-label="Mã SHA256" style="font-family: monospace; font-size: 0.8em; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ received_file.hash }}">{{ received_file.hash | truncate(20, True) }}</td>
-                                    <td data-label="Chữ ký" style="font-family: monospace; font-size: 0.8em; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ received_file.signature }}">{{ received_file.signature | truncate(20, True) }}</td>
-                                    <td data-label="Tải về">
-                                        <a href="#" class="action-button download" title="Tải xuống"><i class="fas fa-download"></i> Tải</a>
+                                    <td data-label="Ngày gửi">{{ received_file.sent_date }}</td>
+                                    <td data-label="Trạng thái">
+                                        <span class="signature-status {{ received_file.status }}">
+                                            {% if received_file.status == 'pending' %}
+                                                Đang chờ
+                                            {% elif received_file.status == 'received' %}
+                                                Đã nhận
+                                            {% elif received_file.status == 'sender_deleted' %}
+                                                Người gửi đã xóa
+                                            {% elif received_file.status == 'file_not_found' %}
+                                                File gốc không còn
+                                            {% else %}
+                                                {{ received_file.status }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td data-label="Thao tác">
+                                        {% if received_file.status == 'pending' %}
+                                            <div class="download-form-container">
+                                                <input type="text" class="received-file-security-code-input" placeholder="Mã bảo mật" data-sent-id="{{ received_file.id }}">
+                                                <button class="action-button download-received-file" data-sent-id="{{ received_file.id }}" title="Tải xuống"><i class="fas fa-download"></i> Tải</button>
+                                            </div>
+                                        {% else %}
+                                            Không khả dụng
+                                        {% endif %}
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -600,17 +672,33 @@
                             <tr>
                                 <th>Tên File</th>
                                 <th>Người nhận</th>
-                                <th>Mã SHA256</th>
-                                <th>Chữ ký</th>
+                                <th>Ngày gửi</th>
+                                <th>Mã bảo mật gửi</th>
+                                <th>Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for sent_file in sent_files %}
                                 <tr>
-                                    <td data-label="Tên File">{{ sent_file.name }}</td>
+                                    <td data-label="Tên File">{{ sent_file.original_name }}</td>
                                     <td data-label="Người nhận">{{ sent_file.receiver }}</td>
-                                    <td data-label="Mã SHA256" style="font-family: monospace; font-size: 0.8em; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ sent_file.hash }}">{{ sent_file.hash | truncate(20, True) }}</td>
-                                    <td data-label="Chữ ký" style="font-family: monospace; font-size: 0.8em; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ sent_file.signature }}">{{ sent_file.signature | truncate(20, True) }}</td>
+                                    <td data-label="Ngày gửi">{{ sent_file.sent_date }}</td>
+                                    <td data-label="Mã bảo mật gửi" style="font-weight: 600; color: var(--primary-dark);">{{ sent_file.sent_security_code }}</td>
+                                    <td data-label="Trạng thái">
+                                        <span class="signature-status {{ sent_file.status }}">
+                                            {% if sent_file.status == 'pending' %}
+                                                Đang chờ
+                                            {% elif sent_file.status == 'received' %}
+                                                Đã nhận
+                                            {% elif sent_file.status == 'sender_deleted' %}
+                                                Bạn đã xóa file gốc
+                                            {% elif sent_file.status == 'file_not_found' %}
+                                                File gốc không còn
+                                            {% else %}
+                                                {{ sent_file.status }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -681,6 +769,9 @@
             const loadingSpinner = document.getElementById('loadingSpinner');
             const flashMessagesList = document.getElementById('flash-messages-list');
             const deleteButtons = document.querySelectorAll('.action-button.delete');
+            const downloadOwnFileButtons = document.querySelectorAll('.download-own-file');
+            const sendFileForm = document.getElementById('sendFileForm');
+            const downloadReceivedFileButtons = document.querySelectorAll('.download-received-file');
             const maxFileSize = 16 * 1024 * 1024; // 16 MB, khớp với app.config['MAX_CONTENT_LENGTH']
 
             // Hàm tạo thông báo flash tùy chỉnh từ JS
@@ -694,11 +785,11 @@
                     li.style.opacity = '0';
                     li.style.transform = 'translateY(-20px)';
                     li.addEventListener('transitionend', () => li.remove());
-                }, 5000);
+                }, 5000); // Ẩn sau 5 giây
             }
 
-            // Xử lý File Input và Client-side Validation (chỉ còn kiểm tra kích thước)
-            if (fileInput) { // Chỉ chạy nếu phần upload tồn tại (khi đã đăng nhập)
+            // Xử lý File Input và Client-side Validation (kiểm tra kích thước)
+            if (fileInput) {
                 fileInput.addEventListener('change', function() {
                     if (this.files && this.files.length > 0) {
                         const file = this.files[0];
@@ -718,23 +809,59 @@
             }
 
             // Hiệu ứng loading khi upload và Client-side validation check trước khi submit
-            if (uploadForm) { // Chỉ chạy nếu form upload tồn tại
+            if (uploadForm) {
                 uploadForm.addEventListener('submit', function(event) {
+                    const fileSecurityCodeInput = document.getElementById('file_security_code');
+
                     if (fileInput.files.length === 0 || fileNameDisplay.value === 'Không có tệp nào được chọn.') {
                         createFlashMessage('Vui lòng chọn một tệp để tải lên.', 'warning');
-                        event.preventDefault(); // Ngăn chặn form submit nếu chưa chọn tệp
+                        event.preventDefault();
+                        return;
+                    }
+
+                    if (!fileSecurityCodeInput.value.trim()) {
+                        createFlashMessage('Vui lòng nhập mã bảo mật cho tệp.', 'error');
+                        event.preventDefault();
+                        return;
+                    }
+                    if (!fileSecurityCodeInput.checkValidity()) {
+                        createFlashMessage(fileSecurityCodeInput.title, 'error');
+                        event.preventDefault();
                         return;
                     }
 
                     const fileToUpload = fileInput.files[0];
                     if (fileToUpload.size > maxFileSize) {
-                        event.preventDefault();
+                        event.preventDefault(); // Đã xử lý flash message ở event listener 'change'
                         return;
                     }
 
+                    // Bắt đầu hiệu ứng loading
                     uploadButton.disabled = true;
                     buttonText.textContent = 'Đang tải lên...';
                     loadingSpinner.style.display = 'block';
+                });
+            }
+            
+            // Xử lý submit form Gửi file cho người khác
+            if (sendFileForm) {
+                sendFileForm.addEventListener('submit', function(event) {
+                    const fileToSend = document.getElementById('fileToSend').value;
+                    const recipient = document.getElementById('recipient').value;
+                    const sentSecurityCodeInput = document.getElementById('sent_security_code');
+                    const sentSecurityCode = sentSecurityCodeInput.value.trim();
+
+                    if (!fileToSend || !recipient || !sentSecurityCode) {
+                        createFlashMessage('Vui lòng chọn tệp, người nhận và nhập mã bảo mật để gửi.', 'error');
+                        event.preventDefault();
+                        return;
+                    }
+                    if (!sentSecurityCodeInput.checkValidity()) {
+                        createFlashMessage(sentSecurityCodeInput.title, 'error');
+                        event.preventDefault();
+                        return;
+                    }
+                    // Có thể thêm hiệu ứng loading cho nút gửi nếu muốn
                 });
             }
 
@@ -751,21 +878,79 @@
             });
 
             // Xử lý nút xóa file (trong phần "File của tôi")
-            // Chỉ thêm event listener nếu nút delete tồn tại (khi đã đăng nhập)
             if (deleteButtons.length > 0) {
                 deleteButtons.forEach(button => {
                     button.addEventListener('click', function() {
-                        const filenameToDelete = this.dataset.filename;
-                        if (confirm(`Bạn có chắc chắn muốn xóa tệp "${filenameToDelete}" không?`)) {
+                        const uniqueFilenameToDelete = this.dataset.uniqueFilename;
+                        if (confirm(`Bạn có chắc chắn muốn xóa tệp này không? (Tệp này sẽ không còn tải được cho người khác đã gửi)`)) {
                             const form = document.createElement('form');
                             form.method = 'POST';
-                            form.action = `/delete/${filenameToDelete}`;
+                            form.action = `/delete/${uniqueFilenameToDelete}`;
                             document.body.appendChild(form);
                             form.submit();
                         }
                     });
                 });
             }
+
+            // Xử lý nút tải xuống file tự upload (đã có mã bảo mật khi upload)
+            if (downloadOwnFileButtons.length > 0) {
+                downloadOwnFileButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const uniqueFilenameToDownload = this.dataset.uniqueFilename;
+                        const inputField = this.parentNode.querySelector('.file-security-code-input');
+                        const securityCode = inputField.value.trim();
+
+                        if (!securityCode) {
+                            createFlashMessage('Vui lòng nhập mã bảo mật của tệp để tải xuống.', 'error');
+                            return;
+                        }
+
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = `/download/${uniqueFilenameToDownload}`;
+                        
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'security_code';
+                        input.value = securityCode;
+                        form.appendChild(input);
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    });
+                });
+            }
+
+            // Xử lý nút tải xuống file đã nhận (có mã bảo mật riêng cho giao dịch gửi)
+            if (downloadReceivedFileButtons.length > 0) {
+                downloadReceivedFileButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const sentIdToDownload = this.dataset.sentId;
+                        const inputField = this.parentNode.querySelector('.received-file-security-code-input');
+                        const securityCode = inputField.value.trim();
+
+                        if (!securityCode) {
+                            createFlashMessage('Vui lòng nhập mã bảo mật của file đã gửi để tải xuống.', 'error');
+                            return;
+                        }
+
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = `/download_sent_file/${sentIdToDownload}`;
+                        
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'security_code';
+                        input.value = securityCode;
+                        form.appendChild(input);
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    });
+                });
+            }
+
 
             // Hàm hiển thị form Đăng nhập/Đăng ký
             window.showAuthForm = function(formType) {
